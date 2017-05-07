@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import './Dashboard.css'
+import './common.css'
 
 class Dashboard extends Component {
   render() {
     return (
       <div className="Dashboard">
-          <h2>HERE BE THE DASHBOARD</h2>
+        <h2>HERE BE THE DASHBOARD</h2>
       </div>
     );
   }

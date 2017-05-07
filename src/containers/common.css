@@ -1,0 +1,31 @@
+.Home .lander {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.Home .lander h1 {
+  font-family: "Open Sans", sans-serif;
+  font-weight: 600
+}
+
+.Home .lander p {
+  color: #999;
+}
+
+@media all and (min-width: 480px) {
+  .Login {
+    padding-top: 60px;
+  }
+
+  .Login form {
+    margin: 0 auto;
+    max-width: 320px;
+    padding-left: 25px;
+    padding-right: 25px;
+  }
+}
+
+.NotFound {
+  padding-top: 50px;
+  text-align: center;
+}
