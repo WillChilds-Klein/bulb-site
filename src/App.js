@@ -20,6 +20,7 @@ class App extends Component {
           <NavMenuItem name='dashboard' onClick={this.handleItemClick} href="/dashboard" />
           <NavMenuItem name='profile' onClick={this.handleItemClick} href="/profile" />
           <Menu.Menu position='right'>
+            <NavMenuItem name='login' onClick={this.handleItemClick} href="/login" />
             <NavMenuItem name='logout' onClick={this.handleItemClick} href="/logout" />
           </Menu.Menu>
         </Menu>
