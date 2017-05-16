@@ -1,3 +1,5 @@
+import 'whatwg-fetch'
+
 function checkStatus(resp) {
   if (resp.status >= 200 && resp.status < 300) {
     return resp
@@ -15,21 +17,26 @@ async function parseJSON(resp) {
 
 function wrapHTTPMethod(method) {
   // TODO: have anonymous func below take params={}
-  return async function (path, data=null) {
+  return async function (path, data) {
+    let body = data ? JSON.stringify(data)
+                    : null
+    let headers = method === 'GET' || method === 'DELETE'
+      ? null
+      : {
+          'content-type': 'application/json; charset=UTF-8',
+        }
     const default_opts = {
         method: method,
-        mode: 'same-origin',
+        mode: 'cors',
         accept: 'application/json',
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8'
-        },
+        headers: headers,
+        body: body,
     }
 
-    if (data) {
-      default_opts.body = data
-    }
+    let url = 'https://dev.buttaface.space' + path
+    //let url = path
 
-    return fetch(path, default_opts)
+    return fetch(url, default_opts)
       .then(checkStatus)
       .then(parseJSON)
   }
