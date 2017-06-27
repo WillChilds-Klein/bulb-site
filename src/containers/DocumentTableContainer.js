@@ -10,9 +10,9 @@ class DocumentTableContainer extends Component {
 
   componentDidMount() {
     get('/documents')
-      .then((docs) =>
+      .then((docs) => {
         this.setState({ documents: docs })
-      ).catch(err => console.log(err))
+      })
   }
 
   render() {

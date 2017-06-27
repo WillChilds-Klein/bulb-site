@@ -6,6 +6,11 @@ class Profile extends Component {
     return (
       <div className="Profile">
           <h2>HERE BE THE PROFILE</h2>
+          <h2>YOUR NAME IS {
+            window.localStorage.getItem("uname") === null
+            ? "UNKNOWN"
+            : window.localStorage.uname.toUpperCase()
+          }</h2>
       </div>
     );
   }
