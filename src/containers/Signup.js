@@ -59,6 +59,7 @@ class Signup extends Component {
               .then(res => {
                 window.localStorage.setItem("uname", res.name);
                 window.localStorage.setItem("email", res.email);
+                window.localStorage.setItem("organization", res.organization);
               })
               .catch(err => {
                 console.log(err);
