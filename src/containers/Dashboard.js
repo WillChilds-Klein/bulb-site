@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import DocumentTableContainer from './DocumentTableContainer';
+import TaskTableContainer from './TaskTableContainer';
 import './common.css'
 
 class Dashboard extends Component {
@@ -8,7 +8,7 @@ class Dashboard extends Component {
       <div className="Dashboard">
         <h2>HERE BE THE DASHBOARD</h2>
         <div>
-          <DocumentTableContainer />
+          <TaskTableContainer />
         </div>
       </div>
     );
