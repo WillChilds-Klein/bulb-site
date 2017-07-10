@@ -25,7 +25,6 @@ function wrapHTTPMethod(method) {
     let access_token = ''
     if (window.localStorage.getItem('access_token')) {
       access_token = window.localStorage.getItem('access_token')
-      console.log(access_token)
     }
     let headers = method === 'GET' || method === 'DELETE'
       ? {
