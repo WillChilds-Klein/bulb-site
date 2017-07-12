@@ -27,11 +27,12 @@ class TaskTable extends Component {
     }
   }
 
-  componentWillReceiveProps(props) {
-    this.setState({tasks: props.tasks})
+  componentWillReceiveProps = (nextProps) => {
+    this.setState({tasks: nextProps.tasks})
+    // TODO: how to invoke sorting?!? need to do this on priority/status update as well...
   }
 
-  handleSort(clickedColumn) {
+  handleSort = (clickedColumn) => {
     const { column, tasks, direction } = this.state;
     if (column === clickedColumn) {
       this.setState({
@@ -47,7 +48,10 @@ class TaskTable extends Component {
     }
   }
 
-  handlePriorityChange(taskId, e, newVals) {
+  /* this is so fucking terrible. why are you copying the entire goddamn task list to update
+     one value of one element?!? this is O(n) in size of task list but should be O(1)...
+   */
+  handlePriorityChange = (taskId, e, newVals) => {
     const task = _.find(this.state.tasks, {'task_id': taskId})
     const newPriority = newVals.value
     if (newPriority !== task.priority) {
@@ -63,13 +67,13 @@ class TaskTable extends Component {
     }
   }
 
-  getPriorityDisplayName(priority) {
+  getPriorityDisplayName = (priority) => {
     let p = _.find(priorityOptions, {value: priority})
     return p ? p.text : 'ERR'
   }
 
   // TODO: priority/status change methods should be merged...
-  handleStatusChange(taskId, e, newVals) {
+  handleStatusChange = (taskId, e, newVals) => {
     const task = _.find(this.state.tasks, {'task_id': taskId})
     const newStatus = newVals.value
     if (newStatus !== task.status) {
@@ -85,7 +89,7 @@ class TaskTable extends Component {
     }
   }
 
-  getStatusDisplayName(status) {
+  getStatusDisplayName = (status) => {
     let s = _.find(statusOptions, {value: status})
     return s ? s.text : 'ERR'
   }
