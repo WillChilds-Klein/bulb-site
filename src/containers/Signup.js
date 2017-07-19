@@ -46,35 +46,39 @@ class Signup extends Component {
 
     post('/users', {'email': email, 'password': password, 'name': name})
       .then(res => {
-        alert('user ' + name + ' successfully created!')
-        post('/auth', {'email': email, 'password': password})
-          .then(res => {
-            window.localStorage.clear();
-            window.localStorage.setItem("access_token", res.access_token);
-            this.setState({email: '', password: ''});   // clear form on submit
-            alert('user logged in with token ' + res.access_token)
-            let uid = jwt_decode(res.access_token).uid;
-            window.localStorage.setItem("uid", uid);
-            get('/users/' + uid)
-              .then(res => {
-                window.localStorage.setItem("uname", res.name);
-                window.localStorage.setItem("email", res.email);
-                window.localStorage.setItem("organization", res.organization);
-              })
-              .catch(err => {
-                console.log(err);
-                alert(`Somehow, we cant fine user {uid}!`);
-              });
-          })
-          .catch(err => {
-            console.log(err);
-            alert('whoops! something went wrong during authentication...');
-          });
+        window.localStorage.clear();
+        this.setState({   // clear form on submit
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+        });
+        alert('user ' + name + ' successfully created!');
+        return post('/auth', {'email': email, 'password': password});
+      })
+      .then(res => {
+        console.log('user logged in with token ' + res.access_token);
+        window.localStorage.setItem("access_token", res.access_token);
+        let uid = jwt_decode(res.access_token).uid;
+        window.localStorage.setItem("user_id", uid);
+        return post(['/users', 'init', uid].join('/'));
+      })
+      .then(res => {
+       let uid = window.localStorage.getItem("user_id");
+        return get('/users/' + uid);
+      })
+      .then(res => {
+        window.localStorage.setItem("uname", res.name);
+        window.localStorage.setItem("email", res.email);
+        window.localStorage.setItem("org_id", res.org_id);
         this.props.history.push('/');   // redirect to home page
       })
-      .catch(err => {
-        alert('error creating user!')
-      })
+      .catch(err => {   // TODO: chain all the .then's and have single .catch?
+        console.log(err);
+        console.log('we had an issue: ' + String(err));
+        alert('we had an issue: ' + String(err));
+        throw Error(err);
+      });
   }
 
   render() {

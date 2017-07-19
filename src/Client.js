@@ -21,7 +21,6 @@ function wrapHTTPMethod(method) {
   return async function (path, data) {
     let body = data ? JSON.stringify(data)
                     : null
-    //let access_token = 'master_key'
     let access_token = ''
     if (window.localStorage.getItem('access_token')) {
       access_token = window.localStorage.getItem('access_token')
