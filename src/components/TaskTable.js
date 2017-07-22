@@ -10,18 +10,6 @@ import {
 import { put } from '../Client.js';
 
 
-const priorityOptions = [
-  {key: 1, text: 'Low', value: 0},
-  {key: 2, text: 'Med.', value: 0.5},
-  {key: 3, text: 'High', value: 1},
-];
-
-const statusOptions = [
-  {key: 1, text: 'Not Started', value: 'NOT_STARTED'},
-  {key: 2, text: 'In Progress', value: 'IN_PROGRESS'},
-  {key: 3, text: 'Complete', value: 'COMPLETE'},
-];
-
 const workspaceOptions = [
   {key: 1, text: 'formation', value: 'FORMATION'},
   {key: 2, text: 'tax', value: 'TAX'},
@@ -37,6 +25,20 @@ const workspaceOptions = [
   {key: 12, text: 'marketing', value: 'MARKETING'},
 ];
 
+
+const priorityOptions = [
+  {key: 1, text: 'Low', value: 0},
+  {key: 2, text: 'Med.', value: 0.5},
+  {key: 3, text: 'High', value: 1},
+];
+
+const statusOptions = [
+  {key: 1, text: 'Not Started', value: 'NOT_STARTED'},
+  {key: 2, text: 'In Progress', value: 'IN_PROGRESS'},
+  {key: 3, text: 'Complete', value: 'COMPLETE'},
+];
+
+
 class TaskTable extends Component {
   constructor(props) {
     super(props)
@@ -48,11 +50,10 @@ class TaskTable extends Component {
       selectedWorkspaces: [],
     }
 
-    this.handleWorkspaceFilterChange.bind(this);
-    this.handleSort.bind(this);
-    this.handlePriorityChange.bind(this);
-    this.handleStatusChange.bind(this);
-    this.getStatusDisplayName.bind(this);
+    this.handleWorkspaceFilterChange = this.handleWorkspaceFilterChange.bind(this);
+    this.handleSort = this.handleSort.bind(this);
+    this.handlePriorityChange = this.handlePriorityChange.bind(this);
+    this.handleStatusChange = this.handleStatusChange.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -116,11 +117,6 @@ class TaskTable extends Component {
     }
   }
 
-  getPriorityDisplayName(priority) {
-    let p = _.find(priorityOptions, {value: priority})
-    return p ? p.text : 'ERR'
-  }
-
   // TODO: priority/status change methods should be merged...
   handleStatusChange(taskId, e, data) {
     const task = _.find(this.state.tasks, {'task_id': taskId})
@@ -136,6 +132,11 @@ class TaskTable extends Component {
         })
         .catch(err => {console.log(err);})
     }
+  }
+
+  getPriorityDisplayName(priority) {
+    let p = _.find(priorityOptions, {value: priority})
+    return p ? p.text : 'ERR'
   }
 
   getStatusDisplayName(status) {
@@ -160,7 +161,7 @@ class TaskTable extends Component {
                 tabIndex={ 1 }
                 loading={ tasks.length === 0 }
                 options={workspaceOptions}
-                onChange={(e, data) => this.handleWorkspaceFilterChange(e, data)}
+                onChange={this.handleWorkspaceFilterChange}
               />
             </Table.HeaderCell>
           </Table.Row>
