@@ -1,8 +1,13 @@
 import React, { Component } from 'react';
 
-import { Table, Dropdown } from 'semantic-ui-react';
-import { put } from '../Client.js';
 import _ from 'lodash';
+import {
+  Dropdown,
+  Icon,
+  Table
+} from 'semantic-ui-react';
+
+import { put } from '../Client.js';
 
 
 const priorityOptions = [
@@ -58,9 +63,11 @@ class TaskTable extends Component {
     // TODO: how to invoke sorting?!? need to do this on priority/status update as well...
   }
 
-  handleWorkspaceFilterChange(e, newVals) {
-    let newSelectedWorkspaces = newVals.value;
+  handleWorkspaceFilterChange(e, data) {
+    let newSelectedWorkspaces = data.value;
     // TODO: probably want return early if old + new selected ws's are equal
+    // NOTE: in order to have "clear all" functionality, will
+    //       need to manage this component our damn selves...
     // 1. outer filter: filter for tasks that meet test of inner filter (see 2.)
     // 2. inner filter: filter for a task's workspaces that are in newSelectedWorkspaces
     let newFilteredTasks = _.filter(this.state.tasks, (task) => {
@@ -93,9 +100,9 @@ class TaskTable extends Component {
   /* this is so fucking terrible. why are you copying the entire goddamn task list to update
      one value of one element?!? this is O(n) in size of task list but should be O(1)...
    */
-  handlePriorityChange(taskId, e, newVals) {
+  handlePriorityChange(taskId, e, data) {
     const task = _.find(this.state.tasks, {'task_id': taskId})
-    const newPriority = newVals.value
+    const newPriority = data.value
     if (newPriority !== task.priority) {
       let newTasks = this.state.tasks.slice()
       let newTask = _.find(newTasks, {'task_id': taskId})
@@ -115,9 +122,9 @@ class TaskTable extends Component {
   }
 
   // TODO: priority/status change methods should be merged...
-  handleStatusChange(taskId, e, newVals) {
+  handleStatusChange(taskId, e, data) {
     const task = _.find(this.state.tasks, {'task_id': taskId})
-    const newStatus = newVals.value
+    const newStatus = data.value
     if (newStatus !== task.status) {
       let newTasks = this.state.tasks.slice()
       let newTask = _.find(newTasks, {'task_id': taskId})
@@ -137,7 +144,7 @@ class TaskTable extends Component {
   }
 
   render() {
-    const {column, displayTasks, direction} = this.state;
+    const {column, tasks, displayTasks, direction } = this.state;
     return (
       <Table singleLine collapsing compact selectable sortable >
         <Table.Header>
@@ -145,13 +152,15 @@ class TaskTable extends Component {
             <Table.HeaderCell colSpan='4'>
               workspaces:
               <Dropdown
-                placeholder='All'
+                placeholder='all'
                 fluid
                 multiple
                 selection
-                options={workspaceOptions}
                 closeOnChange
-                onChange={(e, newVals) => this.handleWorkspaceFilterChange(e, newVals)}
+                tabIndex={ 1 }
+                loading={ tasks.length === 0 }
+                options={workspaceOptions}
+                onChange={(e, data) => this.handleWorkspaceFilterChange(e, data)}
               />
             </Table.HeaderCell>
           </Table.Row>
@@ -162,12 +171,14 @@ class TaskTable extends Component {
               onClick={() => this.handleSort('priority')}
             >
               Priority
+              { column !== 'priority' && <Icon name="sort" /> }
             </Table.HeaderCell>
             <Table.HeaderCell
               sorted={column === 'status' ? direction : null}
               onClick={() => this.handleSort('status')}
             >
               Status
+              { column !== 'status' && <Icon name="sort" /> }
             </Table.HeaderCell>
             <Table.HeaderCell>Workspaces</Table.HeaderCell>
           </Table.Row>

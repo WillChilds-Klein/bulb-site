@@ -18,7 +18,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "deploy": "rm -rf ./build; npm run build && aws s3 sync --delete ./build s3://bulb-site/  && aws cloudfront create-invalidation --distribution-id E1A4Q02T7W56HJ --paths /index.html /asset-manifest.json /static/*",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "./scripts/deploy.sh"
   }
 }
