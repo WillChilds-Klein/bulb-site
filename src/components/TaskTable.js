@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 
 import _ from 'lodash';
+import { Circle } from 'rc-progress';
 import {
+  Grid,
   Dropdown,
   Icon,
+  Label,
   Table
 } from 'semantic-ui-react';
 
@@ -48,6 +51,7 @@ class TaskTable extends Component {
       displayTasks: props.tasks,
       direction: null,
       selectedWorkspaces: [],
+      completionPercentage: 0.0,
     }
 
     this.handleWorkspaceFilterChange = this.handleWorkspaceFilterChange.bind(this);
@@ -60,8 +64,8 @@ class TaskTable extends Component {
     this.setState({
       tasks: nextProps.tasks,
       displayTasks: nextProps.tasks,
+      completionPercentage: this.calculateCompletionPercentage(nextProps.tasks),
     });
-    // TODO: how to invoke sorting?!? need to do this on priority/status update as well...
   }
 
   handleWorkspaceFilterChange(e, data) {
@@ -69,17 +73,23 @@ class TaskTable extends Component {
     // TODO: probably want return early if old + new selected ws's are equal
     // NOTE: in order to have "clear all" functionality, will
     //       need to manage this component our damn selves...
+    let newFilteredTasks = newSelectedWorkspaces.length === 0
+      ? this.state.tasks
+      : this.filterTasksByWorkspaces(this.state.tasks, newSelectedWorkspaces);
+    this.setState({
+      displayTasks: _.sortBy(newFilteredTasks, [ this.state.column ]),
+      selectedWorkspaces: newSelectedWorkspaces,
+      completionPercentage: this.calculateCompletionPercentage(newFilteredTasks),
+    });
+  }
+
+  filterTasksByWorkspaces(tasks, workspaces) {
     // 1. outer filter: filter for tasks that meet test of inner filter (see 2.)
     // 2. inner filter: filter for a task's workspaces that are in newSelectedWorkspaces
-    let newFilteredTasks = _.filter(this.state.tasks, (task) => {
-      return _.intersection(task.workspaces, newSelectedWorkspaces).length > 0
+    let filteredTasks = _.filter(tasks, (task) => {
+      return _.intersection(task.workspaces, workspaces).length > 0
     });
-    let newDisplayTasks = newSelectedWorkspaces.length ? newFilteredTasks
-                                                       : this.state.tasks;
-    this.setState({
-      displayTasks: newDisplayTasks,
-      selectedWorkspaces: newSelectedWorkspaces,
-    });
+    return filteredTasks;
   }
 
   handleSort(clickedColumn) {
@@ -110,7 +120,9 @@ class TaskTable extends Component {
       newTask.priority = newPriority
       put(`/tasks/${task.task_id}`, {priority: newPriority})
         .then(res => {
-          this.setState({tasks: newTasks})
+          this.setState({
+            tasks: newTasks,
+          })
           console.log(`Successfully changed priority to ${newPriority} for ${task.name}`)
         })
         .catch(err => {console.log(err);})
@@ -125,12 +137,19 @@ class TaskTable extends Component {
       let newTasks = this.state.tasks.slice()
       let newTask = _.find(newTasks, {'task_id': taskId})
       newTask.status = newStatus
+      let filteredTasks = this.filterTasksByWorkspaces(newTasks,
+                                                      this.state.selectedWorkspaces);
+      let displayTasks = filteredTasks.length > 0 ? filteredTasks : newTasks;
+      let newCompletionPercentage = this.calculateCompletionPercentage(displayTasks);
       put(`/tasks/${task.task_id}`, {status: newStatus})
         .then(res => {
-          this.setState({tasks: newTasks})
+          this.setState({
+            tasks: newTasks,
+            completionPercentage: newCompletionPercentage,
+          })
           console.log(`Successfully changed status to ${newStatus} for ${task.name}`)
         })
-        .catch(err => {console.log(err);})
+        .catch(err => console.log(err))
     }
   }
 
@@ -144,80 +163,116 @@ class TaskTable extends Component {
     return s ? s.text : 'ERR'
   }
 
-  render() {
-    const {column, tasks, displayTasks, direction } = this.state;
-    return (
-      <Table singleLine collapsing compact selectable sortable >
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell colSpan='4'>
-              workspaces:
-              <Dropdown
-                placeholder='all'
-                fluid
-                multiple
-                selection
-                closeOnChange
-                tabIndex={ 1 }
-                loading={ tasks.length === 0 }
-                options={workspaceOptions}
-                onChange={this.handleWorkspaceFilterChange}
-              />
-            </Table.HeaderCell>
-          </Table.Row>
-          <Table.Row>
-            <Table.HeaderCell>Name</Table.HeaderCell>
-            <Table.HeaderCell
-              sorted={column === 'priority' ? direction : null}
-              onClick={() => this.handleSort('priority')}
-            >
-              Priority
-              { column !== 'priority' && <Icon name="sort" /> }
-            </Table.HeaderCell>
-            <Table.HeaderCell
-              sorted={column === 'status' ? direction : null}
-              onClick={() => this.handleSort('status')}
-            >
-              Status
-              { column !== 'status' && <Icon name="sort" /> }
-            </Table.HeaderCell>
-            <Table.HeaderCell>Workspaces</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+  calculateCompletionPercentage(tasks) {
+    const inProgressTasks = _.filter(tasks, {'status': 'IN_PROGRESS'});
+    const completedTasks = _.filter(tasks, {'status': 'COMPLETE'});
+    const pct = completedTasks.length / (completedTasks.length + inProgressTasks.length);
+    return isNaN(pct) ? 0.0 : pct;  // TODO: have this return pct, check for NaN at label?
+  }
 
-        <Table.Body>
-          {_.map(displayTasks, ({task_id, name, priority, status, workspaces}) => (
-            <Table.Row key={task_id}>
-              <Table.Cell>{name}</Table.Cell>
-              <Table.Cell>
-                <Dropdown
-                  text={this.getPriorityDisplayName(priority)}
-                  options={priorityOptions}
-                  defaultValue={priority}
-                  compact
-                  onChange={(e, data) => this.handlePriorityChange(task_id, e, data)}
+  render() {
+    const {column, tasks, displayTasks, direction, completionPercentage} = this.state;
+    return (
+      <Grid
+        columns={2}
+        stackable
+      >
+        <Grid.Column width={4}>
+          <div style={ {width: 200, margin: 75} }>
+            <Circle
+              percent={completionPercentage * 100}
+              strokeWidth="8"
+              trailWidth="8"
+              strokeColor="#53DF83"
+              strokeLinecap="round"
+            />
+            <Label
+              size={ "big" }
+            >
+              { parseInt(completionPercentage * 100, /*radix=*/10).toString() + "%" }
+            </Label>
+          </div>
+        </Grid.Column>
+
+        <Grid.Column width={11}>
+          <Table
+            singleLine
+            compact
+            selectable
+            sortable
+          >
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell colSpan='4'>
+                  workspaces:
+                  <Dropdown
+                    placeholder='all'
+                    fluid
+                    multiple
+                    selection
+                    closeOnChange
+                    tabIndex={ 1 }
+                    loading={ tasks.length === 0 }
+                    options={workspaceOptions}
+                    onChange={this.handleWorkspaceFilterChange}
+                  />
+                </Table.HeaderCell>
+              </Table.Row>
+              <Table.Row>
+                <Table.HeaderCell>Name</Table.HeaderCell>
+                <Table.HeaderCell
+                  sorted={column === 'priority' ? direction : null}
+                  onClick={() => this.handleSort('priority')}
                 >
-                </Dropdown>
-              </Table.Cell>
-              <Table.Cell>
-                <Dropdown
-                  text={this.getStatusDisplayName(status)}
-                  options={statusOptions}
-                  defaultValue={status}
-                  compact
-                  onChange={(e, data) => this.handleStatusChange(task_id, e, data)}
+                  Priority
+                  { column !== 'priority' && <Icon name="sort" /> }
+                </Table.HeaderCell>
+                <Table.HeaderCell
+                  sorted={column === 'status' ? direction : null}
+                  onClick={() => this.handleSort('status')}
                 >
-                </Dropdown>
-              </Table.Cell>
-              <Table.Cell>{
-                workspaces.reduce((acc, ws) =>
-                  acc + ", " + ws
-                )}
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table>
+                  Status
+                  { column !== 'status' && <Icon name="sort" /> }
+                </Table.HeaderCell>
+                <Table.HeaderCell>Workspaces</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+
+            <Table.Body>
+              {_.map(displayTasks, ({task_id, name, priority, status, workspaces}) => (
+                <Table.Row key={task_id}>
+                  <Table.Cell>{name}</Table.Cell>
+                  <Table.Cell>
+                    <Dropdown
+                      text={this.getPriorityDisplayName(priority)}
+                      options={priorityOptions}
+                      defaultValue={priority}
+                      compact
+                      onChange={(e, data) => this.handlePriorityChange(task_id, e, data)}
+                    >
+                    </Dropdown>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Dropdown
+                      text={this.getStatusDisplayName(status)}
+                      options={statusOptions}
+                      defaultValue={status}
+                      compact
+                      onChange={(e, data) => this.handleStatusChange(task_id, e, data)}
+                    >
+                    </Dropdown>
+                  </Table.Cell>
+                  <Table.Cell>{
+                    workspaces.reduce((acc, ws) =>
+                      acc + ", " + ws
+                    )}
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table>
+        </Grid.Column>
+      </Grid>
   )}
 };
 
